@@ -3,14 +3,23 @@ class Solution(object):
         """
         :type prices: List[int]
         :rtype: int
+        
         Solution 1
-        max_ = 0
-        min_ = prices[0]
-        for price in prices:
-            min_ = min(min_, price)
-            profit = price - min_
-            max_ = max(max_, profit)
-        return max_
+        class Solution(object):
+            def maxProfit(self, prices):
+                """
+                :type prices: List[int]
+                :rtype: int
+
+                """
+                profit = 0
+                cost = prices[0]
+
+                for price in prices:
+                    cost = min(price, cost)
+                    profit = max(profit, price - cost)
+
+                return profit
         """
         #Solution 2
         #faster runtime time and lesser memory than method1
