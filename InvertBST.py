@@ -4,6 +4,7 @@ class Solution(object):
         :type root: TreeNode
         :rtype: TreeNode
         """
+        # Recurisve solution 
         def invertRoot(root):
             if root == None:
                 return None
@@ -14,4 +15,5 @@ class Solution(object):
         
         invertRoot(root)
         return root
+        
         
