@@ -1,18 +1,21 @@
 def wordPattern(self, pattern: str, s: str) -> bool:
-        d1, d2 = defaultdict(list), defaultdict(list)
+        words = s.split(" ")
+        # edge case
+        if len(pattern) != len(words):
+            return False 
 
-        for idx, char in enumerate(pattern):
-            if char in d1:
-                d1[char].append(idx)
+        char_to_word = defaultdict(str)
+        words_used = set() 
+
+        for char, word in zip(pattern, words):
+            # print(char, word)
+            if char in char_to_word:
+                if char_to_word[char] != word:
+                    return False
             else:
-                d1[char] = [idx]
-
-        compare_string = s.split(" ")
-        print(compare_string)
-        for idx, char in enumerate(compare_string):
-            if char in d2:
-                d2[char].append(idx)
-            else:
-                d2[char] = [idx]
-
-        return list(d1.values()) == list(d2.values())
+                if char_to_word[char] in words_used:
+                    return False
+                else:
+                    char_to_word[char] = word
+                    words_used.add(char)         
+        return True
