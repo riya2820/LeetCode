@@ -4,24 +4,16 @@ class Solution:
     def containsNearbyDuplicate(self, nums, k):
         # edge case: no unique value in list
         if len(nums) == len(set(nums)):
-            return False
+            return False 
 
-        d = defaultdict(list)
+        seen = {}
         for idx, num in enumerate(nums):
-            if num in d.keys():
-                d[num].append(idx)
+            if num in seen and idx-seen[num] <= k: 
+                return True
             else:
-                d[num] = [idx]
+                seen[num] = idx
 
-
-        diff = 1000
-        for key, val in d.items():
-            val.sort()
-            for i in range(len(val)-1):
-                if abs(val[i+1]-val[i]) < diff:
-                    diff = abs(val[i+1]-val[i])
-
-        return diff <= k
+        return False 
 
 
 # Test Case 1
@@ -38,6 +30,6 @@ k3 = 2
 
 # nums[i] == nums[j] and abs(i - j) <= k.
 A = Solution()
-print(A.containsNearbyDuplicate(nums,k))
+# print(A.containsNearbyDuplicate(nums,k))
 # print(A.containsNearbyDuplicate(nums2,k2))
-# print(A.containsNearbyDuplicate(nums3,k3))
+print(A.containsNearbyDuplicate(nums3,k3))
