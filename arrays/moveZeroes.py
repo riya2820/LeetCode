@@ -3,14 +3,11 @@ class Solution:
         """
         Do not return anything, modify nums in-place instead.
         """
-        temp1, temp2 = 0,0
         l,r = 0,1
 
         while l < len(nums) and r < len(nums):
             if nums[l] == 0 and nums[r] != 0: # 0, 1
-                temp1 = nums[r] # 1
-                temp2 = nums[l]
-                nums[l], nums[r] = temp1, temp2 
+                nums[l], nums[r] = nums[r], nums[l]
                 l += 1
                 r += 1
             
