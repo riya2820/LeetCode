@@ -35,3 +35,25 @@ class Solution(object):
         odd.next = evenHead
         return head
         
+
+    def reverseList(self, head):
+        prev = None
+        #   1 -> 2 -> 3 -> 4
+        # <- c   h          
+        # p  -> 
+        #    1 <- 2 c,h 
+        while head:
+            curr = head
+            head = head.next
+            curr.next = prev
+            prev = curr
+
+        return head
+
+
+    A = Solution()
+    print(A.oddEvenList([1,2,3,4]))
+    print(A.oddEvenList([1,2,3,4]))
+
+    print(A.reverseList([1,2,3,4]))
+    print(A.reverseList([0,3,5]))

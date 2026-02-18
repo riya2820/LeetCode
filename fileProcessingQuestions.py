@@ -85,6 +85,7 @@ def read_csv_file(file1):
         csvFile = csv.DictReader(file) # OrderedDict([('Organization', 'Alphabet'), ... 
         for line in csvFile:
             print(line)
+            
 # example
 data = {"a":{"b":1,"c":{"d":2}}, "e":3}
 print(flatten(data))  
