@@ -2,6 +2,65 @@ import requests
 from datetime import datetime, timedelta
 import threading
 import time
+import redis
+import json
+
+r = redis.Redis(host='localhost', port=6379)
+
+def get_faq_response(query: str, fetch_from_db):
+    cached = r.get(query)
+    if cached:
+        return cached
+    
+    result = fetch_from_db(query) #unclear are we calling a function then why passing it in args
+    r.set(query, result)
+    return result
+
+def process_records(records: list[dict]) -> list[dict]:
+    results = []
+    for record in records:
+        if record["status"] == "active": # case sensitive could crash, add error handling
+            results.append({
+                "id": record["id"], # use .get() instead and add default case as 0 or ""
+                "value": record["value"] * 2
+            })
+    return results
+
+def extract():
+    data = fetch_from_api() # function not defiend 
+    return data
+
+def transform(data):
+    return [d for d in data if d["valid"]]
+
+def load(data):
+    db.insert_many(data)
+
+# ETL
+extract() 
+transform(extract())
+load(transform(extract()))
+
+def chunk_document(text: str, chunk_size: int = 500) -> list[str]:
+    chunks = []
+    for i in range(0, len(text), chunk_size): # while loop and then increment this will be for example 0-5 then 2-6
+        chunks.append(text[i:i+chunk_size]) 
+    return chunks
+
+
+def fetch_all_records(api_client) -> list:
+    page = 1
+    results = []
+    
+    while True:
+        response = api_client.get(page=page)
+        results.extend(response["data"]) # use .get()
+        if response["data"] == []:
+            break
+        page += 1
+    
+    return results
+
 
 def generate_weekly_report(facility_id, db_client):
     end_date = datetime.now()
