@@ -1,5 +1,6 @@
 class Solution:
     def numIslands(self, grid: List[List[str]]) -> int:
+
         if not grid or not grid[0]:
             return 0
 
@@ -21,7 +22,7 @@ class Solution:
 
         num_islands = 0
         for row in range(len(grid)):
-            for col in range(len(grid[0])):
+            for col in range(len(grid[0])): 
                 if grid[row][col] == "1":
                     num_islands += 1
                     dfs(row, col)
