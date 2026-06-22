@@ -1,306 +1,311 @@
-import requests
-from datetime import datetime, timedelta
-import threading
-import time
-import redis
-import json
+"""
+NeetCode 150 — Hashing + Linked Lists  [PRACTICE STUBS]
+Single file, runnable offline:  python3 neetcode_linkedlists_practice.py
 
-r = redis.Redis(host='localhost', port=6379)
+Fill in each method. Tests at the bottom check your work — run the file to
+see which pass. An unimplemented method raises; the suite stops there.
 
-def get_faq_response(query: str, fetch_from_db):
-    cached = r.get(query)
-    if cached:
-        return cached
-    
-    result = fetch_from_db(query) #unclear are we calling a function then why passing it in args
-    r.set(query, result)
-    return result
+Problems:
+  1. Design HashSet
+  2. Design HashMap
+  3. Reverse a Linked List
+  4. Merge Two Sorted Linked Lists
+  5. Linked List Cycle Detection
+  6. Palindrome Linked List
+  7. Remove Linked List Elements
+  8. Middle of the Linked List
+  9. Intersection of Two Linked Lists
+"""
 
-def process_records(records: list[dict]) -> list[dict]:
-    results = []
-    for record in records:
-        if record["status"] == "active": # case sensitive could crash, add error handling
-            results.append({
-                "id": record["id"], # use .get() instead and add default case as 0 or ""
-                "value": record["value"] * 2
-            })
-    return results
-
-def extract():
-    data = fetch_from_api() # function not defiend 
-    return data
-
-def transform(data):
-    return [d for d in data if d["valid"]]
-
-def load(data):
-    db.insert_many(data)
-
-# ETL
-extract() 
-transform(extract())
-load(transform(extract()))
-
-def chunk_document(text: str, chunk_size: int = 500) -> list[str]:
-    chunks = []
-    for i in range(0, len(text), chunk_size): # while loop and then increment this will be for example 0-5 then 2-6
-        chunks.append(text[i:i+chunk_size]) 
-    return chunks
+from typing import Optional
 
 
-def fetch_all_records(api_client) -> list:
-    page = 1
-    results = []
-    
-    while True:
-        response = api_client.get(page=page)
-        results.extend(response["data"]) # use .get()
-        if response["data"] == []:
-            break
-        page += 1
-    
-    return results
+# ----------------------------------------------------------------------
+# Scaffolding — ListNode + helpers. Don't reimplement these; use them in
+# your own scratch tests. (build_list / to_list / make_cycle / intersect)
+# ----------------------------------------------------------------------
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
 
 
-def generate_weekly_report(facility_id, db_client):
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=7)
-    
-    query = f"""
-        SELECT patient_id, assessment_score, insurance_type
-        FROM assessments
-        WHERE facility_id = {facility_id}
-        AND assessment_date BETWEEN '{start_date}' AND '{end_date}'
-    """
-    
-    rows = db_client.execute(query)
-    
-    report = {
-        "facility": facility_id,
-        "period": f"{start_date} to {end_date}",
-        "total_patients": len(rows),
-        "average_score": sum(r["assessment_score"] for r in rows) / len(rows),
-        "generated_at": datetime.now()
-    }
-    
-    return report
+def build_list(vals) -> Optional[ListNode]:
+    """Python list -> linked list. [] -> None."""
+    dummy = ListNode()
+    cur = dummy
+    for v in vals:
+        cur.next = ListNode(v)
+        cur = cur.next
+    return dummy.next
 
 
-
-'''
-def sync_patient_data(patient_ids, api_client):
-    results = {}
-    
-    for pid in patient_ids:
-        response = api_client.get_patient(pid)
-        
-        if response.status_code == 200:
-            results[pid] = response.json()
-        elif response.status_code == 404:
-            results[pid] = None
-        elif response.status_code == 429:
-            time.sleep(1)
-            response = api_client.get_patient(pid)
-            results[pid] = response.json()
-    
-    return results
+def to_list(head: Optional[ListNode]) -> list:
+    """Linked list -> Python list. (Don't call on a cyclic list.)"""
+    out = []
+    while head:
+        out.append(head.val)
+        head = head.next
+    return out
 
 
-def get_average_score(patient_ids, score_lookup):
-    total = 0
-    n = len(patient_ids)
-    
-    for pid in patient_ids:
-        if pid in score_lookup:
-            total += score_lookup[pid]
-        else:
-            n -= 1
-    
-    if n == 0: # error handling
+def make_cycle(vals, pos) -> Optional[ListNode]:
+    """Build a list; connect the tail's next to the node at index `pos`.
+    pos = -1 means no cycle."""
+    head = build_list(vals)
+    if not head:
         return None
-
-    average = total / n
-    return round(average, 2)
-
-score_lookup = {"P001": 80, "P002": 60, "P003": 90}
-patient_ids = ["P001", "P002", "P004"]
-
-print(get_average_score(patient_ids, score_lookup))
-
-
-def deduplicate_patients(records):
-    seen = set() # optimized to O(1) lookup instead of O(n)
-    unique = []
-    
-    for record in records:
-        if record["patient_id"] not in seen:
-            seen.add(record["patient_id"])
-            unique.append(record)
-    
-    return unique
-
-records = [{"patient_id": f"P{i % 50}"} for i in range(10000)]
-print(deduplicate_patients(records))
+    nodes = []
+    cur = head
+    while cur:
+        nodes.append(cur)
+        cur = cur.next
+    if pos != -1:
+        nodes[-1].next = nodes[pos]
+    return head
 
 
-class RecordSync:
+def make_intersection(a_only, b_only, shared):
+    """Build two lists that share a common tail.
+    Returns (headA, headB, intersection_node). Shared can be [] (-> None)."""
+    shared_head = build_list(shared)
+
+    def append_tail(head, tail):
+        if not head:
+            return tail
+        cur = head
+        while cur.next:
+            cur = cur.next
+        cur.next = tail
+        return head
+
+    headA = append_tail(build_list(a_only), shared_head)
+    headB = append_tail(build_list(b_only), shared_head)
+    return headA, headB, shared_head
+
+
+# ----------------------------------------------------------------------
+# 1. Design HashSet
+# HINT: build it yourself — don't wrap Python's set(). Use a fixed array of
+#       buckets (size e.g. 1000) and chaining: bucket index = key % size,
+#       each bucket is a list. add/remove/contains walk the bucket's list.
+# ----------------------------------------------------------------------
+class MyHashSet:
     def __init__(self):
-        self.synced = []
-        self.failed = []
-    
-    def sync_record(self, record):
-        try:
-            # Simulates an API call
-            if record["id"] % 2 == 0:
-                raise ValueError("API error")
-            self.synced.append(record["id"])
-        except ValueError:
-            self.failed.append(record["id"])
-    
-    def sync_all(self, records):
-        threads = []
-        for record in records:
-            t = threading.Thread(target=self.sync_record, args=(record,))
-            threads.append(t)
-            t.start()
-        
-        for t in threads:
-            t.join()
-        
-        return self.synced, self.failed
+        raise NotImplementedError
 
-syncer = RecordSync()
-records = [{"id": i} for i in range(100)]
-synced, failed = syncer.sync_all(records)
-print(f"Synced: {len(synced)}, Failed: {len(failed)}")
+    def add(self, key: int) -> None:
+        raise NotImplementedError
+
+    def remove(self, key: int) -> None:
+        raise NotImplementedError
+
+    def contains(self, key: int) -> bool:
+        raise NotImplementedError
 
 
+# ----------------------------------------------------------------------
+# 2. Design HashMap
+# HINT: same bucket/chaining idea as HashSet, but store (key, value) pairs.
+#       put overwrites if key exists; get returns -1 if absent; remove drops
+#       the pair. Each bucket holds a list of [key, value].
+# ----------------------------------------------------------------------
+class MyHashMap:
+    def __init__(self):
+        raise NotImplementedError
+
+    def put(self, key: int, value: int) -> None:
+        raise NotImplementedError
+
+    def get(self, key: int) -> int:
+        raise NotImplementedError
+
+    def remove(self, key: int) -> None:
+        raise NotImplementedError
 
 
-def calculate_reimbursement(admissions):
-    total = 0 # may or may not need this - design choice
-    processed = []
-    
-    for admission in admissions:
-        try:
-            days = (admission["discharge"] - admission["admit"]).days # 10
-        except KeyError:
-            print("Error invalid discharge and or admit value.")
+class Solution:
+    # ------------------------------------------------------------------
+    # 3. Reverse a Linked List
+    # HINT: walk with prev=None, cur=head. Each step: save cur.next, point
+    #       cur.next back to prev, advance prev and cur. Return prev.
+    # ------------------------------------------------------------------
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head:
+            return []
 
-        if days <= 0: # error handling for bad entries
-            raise ValueError(f"Invalid admission window for {admission.get('patient_id')}")
-        
-        rate = admission.get("daily_rate", 200) # 300
-        amount = days * rate # 3000
-        now = datetime.now() # consistent for all records inside processed
+        curr = head
+        prev = None
+        # p,     c
+        #    1 -> 2 -> 3 -> 4
+        while curr and curr.next:
+            prev = curr.next
+            prev.next = curr
 
-        if admission["insurance"].lower() == "medicare":
-            amount = amount * 1.15  # 3000 * 1.15
-        
-        total += amount # 3000 * 1.15
-        processed.append({
-            "patient_id": admission.get("patient_id","")
-            "amount": amount,
-            "processed_at": now
-        })
-    
-    return total, processed
+        return prev
 
-admissions = [
-    {
-        "patient_id": "P001",
-        "admit": datetime(2024, 1, 1),
-        "discharge": datetime(2024, 1, 10),
-        "insurance": "medicare",
-        "daily_rate": 300
-    }
-]
+    # ------------------------------------------------------------------
+    # 4. Merge Two Sorted Linked Lists
+    # HINT: dummy head + tail pointer. Compare list1/list2 heads, attach the
+    #       smaller, advance it. Attach whatever's left at the end.
+    # ------------------------------------------------------------------
+    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+        # 1 -> 3- > 7
+        # 2 -> 4 -> 6 
+        merged = ListNode(None) # dummy node
 
-total, records = calculate_reimbursement(admissions)
-print(calculate_reimbursement(admissions))
+        while list1.next and list2.next:
+            if list1.next < list2.next:
+                merged.next = list1.next
+                list1.next = list1.next.next
+            else:
+                merged.next = list2.next
+                list2.next = list2.next.next
+            
+        if list1:
+            merged.next = list1
+        if list2:
+            merged.next = list2
 
+        return 
 
+    # ------------------------------------------------------------------
+    # 5. Linked List Cycle Detection
+    # HINT: Floyd's — slow moves 1, fast moves 2. If they ever meet there's
+    #       a cycle; if fast hits None, there isn't.
+    # ------------------------------------------------------------------
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        raise NotImplementedError
 
-def fetch_all_assessments(base_url, api_key):
-    page = 1
-    all_assesments = []
-    headers = {"Authorization": f"Bearer {api_key}"}
+    # ------------------------------------------------------------------
+    # 6. Palindrome Linked List
+    # HINT: find middle (slow/fast), reverse the second half, then compare
+    #       the two halves node by node. (Or dump values to a list and use
+    #       two pointers — simpler but O(n) space.)
+    # ------------------------------------------------------------------
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        raise NotImplementedError
 
-    while True:
-        response = requests.get(f"{base_url}/assessments", headers=headers, params={"page":page})
-        data = response.json()
-        all_assesments.extend(data["assesments"])
+    # ------------------------------------------------------------------
+    # 7. Remove Linked List Elements
+    # HINT: dummy node before head handles removals at the front. Walk with
+    #       a prev pointer; when cur.val == val, splice it out (prev.next =
+    #       cur.next). Return dummy.next.
+    # ------------------------------------------------------------------
+    def removeElements(self, head: Optional[ListNode], val: int) -> Optional[ListNode]:
+        raise NotImplementedError
 
-        if len(all_assesments) >= data["tota"]:
-            break
-        page += 1
-    return all_assesments
+    # ------------------------------------------------------------------
+    # 8. Middle of the Linked List  (if even count, return the SECOND middle)
+    # HINT: slow/fast pointers; when fast reaches the end, slow is at middle.
+    # ------------------------------------------------------------------
+    def middleNode(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        raise NotImplementedError
 
-# The API response looks like:
-# {
-#   "assessments": [...],
-#   "total": 847,
-#   "page": 1,
-#   "per_page": 100
-# }
-print(fetch_all_assessments(base_url, api_key))
-
-
-def process_records(records, errors=None):
-    if errors is None:
-        errors = []
-    
-    for record in records:
-        try:
-            result = int(record["value"]) * 2
-            print(f"Processed: {result}")
-        except Exception:
-            errors.append(record["id"])
-    
-    return errors
-
-# Test 1: basic usage, no errors passed in
-batch1 = [{"id": 1, "value": "10"}, {"id": 2, "value": "bad"}]
-result1 = process_records(batch1)
-print(result1)  # [2]
-
-# Test 2: caller wants to accumulate errors across batches
-all_errors = []
-batch1 = [{"id": 1, "value": "10"}, {"id": 2, "value": "bad"}]
-batch2 = [{"id": 3, "value": "abc"}]
-
-process_records(batch1, all_errors)
-process_records(batch2, all_errors)
-print(all_errors)  # [2, 3] — both bad records accumulated
+    # ------------------------------------------------------------------
+    # 9. Intersection of Two Linked Lists  (return the shared NODE, not value)
+    # HINT: two pointers a, b. When one hits None, redirect it to the OTHER
+    #       list's head. They meet at the intersection after at most len(a)+
+    #       len(b) steps (or both reach None if no intersection).
+    # ------------------------------------------------------------------
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:
+        raise NotImplementedError
 
 
-def get_patient_scores(api_response):
-    patients = api_response["data"]["patients"]
-    print(patients)
-    results = []
-    
-    for patient in patients:
-        # score = int(patient.get("hipps_score") or 0)
-        score = int(patient["hipps_score"]) if "hipps_score" in patient else 0
-        name = patient["name"]
-        results.append({
-            "name": name,
-            "score": score,
-            "high_risk": score > 50
-        })
-    
-    return results
+# ----------------------------------------------------------------------
+# Tests — encode the expected answers, so they double as the spec.
+# ----------------------------------------------------------------------
+def run_tests():
+    s = Solution() 
 
-# Called like:
-response = {
-    "data": {
-        "patients": [
-            {"name": "Alice", "hipps_score": 72},
-            {"name": "Bob", "hipps_score": "45"},
-            {"name": "Carol"}
-        ]
-    }
-}
+    # 3. Reverse
+    print(to_list(s.reverseList(build_list([1, 2, 3, 4, 5])))) # == [5, 4, 3, 2, 1]
+    print(to_list(s.reverseList(build_list([])))) # == []
+    print(to_list(s.reverseList(build_list([1])))) # == [1]
+    print("3. reverseList              OK")
+
+    # 4. Merge Two Sorted Lists
+    assert to_list(s.mergeTwoLists(build_list([1, 2, 4]), build_list([1, 3, 4]))) == [1, 1, 2, 3, 4, 4]
+    assert to_list(s.mergeTwoLists(build_list([]), build_list([]))) == []
+    assert to_list(s.mergeTwoLists(build_list([]), build_list([0]))) == [0]
+    print("4. mergeTwoLists            OK")
+
+    '''
+    # 1. Design HashSet
+    hs = MyHashSet()
+    hs.add(1)
+    hs.add(2)
+    assert hs.contains(1) is True
+    assert hs.contains(3) is False
+    hs.add(2)
+    hs.remove(2)
+    assert hs.contains(2) is False
+    assert hs.contains(1) is True
+    print("1. MyHashSet                OK")
+
+    # 2. Design HashMap
+    hm = MyHashMap()
+    hm.put(1, 1)
+    hm.put(2, 2)
+    assert hm.get(1) == 1
+    assert hm.get(3) == -1
+    hm.put(2, 1)            # overwrite
+    assert hm.get(2) == 1
+    hm.remove(2)
+    assert hm.get(2) == -1
+    print("2. MyHashMap                OK"
 
 
-print(get_patient_scores(response))'''
+    s = Solution() 
+
+    # 3. Reverse
+    assert to_list(s.reverseList(build_list([1, 2, 3, 4, 5]))) == [5, 4, 3, 2, 1]
+    assert to_list(s.reverseList(build_list([]))) == []
+    assert to_list(s.reverseList(build_list([1]))) == [1]
+    print("3. reverseList              OK")
+
+    # 4. Merge Two Sorted Lists
+    assert to_list(s.mergeTwoLists(build_list([1, 2, 4]), build_list([1, 3, 4]))) == [1, 1, 2, 3, 4, 4]
+    assert to_list(s.mergeTwoLists(build_list([]), build_list([]))) == []
+    assert to_list(s.mergeTwoLists(build_list([]), build_list([0]))) == [0]
+    print("4. mergeTwoLists            OK")
+
+    # 5. Cycle Detection
+    assert s.hasCycle(make_cycle([3, 2, 0, -4], 1)) is True
+    assert s.hasCycle(make_cycle([1, 2], 0)) is True
+    assert s.hasCycle(make_cycle([1], -1)) is False
+    assert s.hasCycle(build_list([])) is False
+    print("5. hasCycle                 OK")
+
+    # 6. Palindrome
+    assert s.isPalindrome(build_list([1, 2, 2, 1])) is True
+    assert s.isPalindrome(build_list([1, 2, 3, 2, 1])) is True
+    assert s.isPalindrome(build_list([1, 2, 3])) is False
+    assert s.isPalindrome(build_list([1])) is True
+    print("6. isPalindrome             OK")
+
+    # 7. Remove Elements
+    assert to_list(s.removeElements(build_list([1, 2, 6, 3, 4, 5, 6]), 6)) == [1, 2, 3, 4, 5]
+    assert to_list(s.removeElements(build_list([7, 7, 7, 7]), 7)) == []
+    assert to_list(s.removeElements(build_list([]), 1)) == []
+    print("7. removeElements           OK")
+
+    # 8. Middle (even count -> second middle)
+    assert to_list(s.middleNode(build_list([1, 2, 3, 4, 5]))) == [3, 4, 5]
+    assert to_list(s.middleNode(build_list([1, 2, 3, 4, 5, 6]))) == [4, 5, 6]
+    assert to_list(s.middleNode(build_list([1]))) == [1]
+    print("8. middleNode               OK")
+
+    # 9. Intersection
+    headA, headB, inter = make_intersection([4, 1], [5, 6, 1], [8, 4, 5])
+    assert s.getIntersectionNode(headA, headB) is inter
+    headA2, headB2, _ = make_intersection([2, 6, 4], [1, 5], [])  # no shared tail
+    assert s.getIntersectionNode(headA2, headB2) is None
+    print("9. getIntersectionNode      OK")
+    '''
+
+    print("\nAll tests passed.")
+
+
+if __name__ == "__main__":
+    run_tests()

@@ -131,7 +131,18 @@ class Solution:
     #       cur.next back to prev, advance prev and cur. Return prev.
     # ------------------------------------------------------------------
     def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
-        raise NotImplementedError
+        if not head:
+            return []
+
+        curr = head
+        prev = None
+        # p,     c
+        #    1 -> 2 -> 3 -> 4
+        while curr and curr.next:
+            prev = curr.next
+            prev.next = curr
+
+        return prev
 
     # ------------------------------------------------------------------
     # 4. Merge Two Sorted Linked Lists
@@ -139,7 +150,28 @@ class Solution:
     #       smaller, advance it. Attach whatever's left at the end.
     # ------------------------------------------------------------------
     def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
-        raise NotImplementedError
+        # 3- > 7
+        # 2 -> 4 -> 6 
+
+        # 1 
+        merged = ListNode(-1)
+        prev = merged
+        # merged = ListNode(-1) # dummy node
+
+        while list1.val and list2.val:
+            if list1.val < list2.val:
+                prev.next = list1.val
+                list1 = list1.next
+            else:
+                prev.next = list2.val
+                list2 = list2.next
+            
+        if list1:
+            merged.next = list1
+        if list2:
+            merged.next = list2
+
+        return merged
 
     # ------------------------------------------------------------------
     # 5. Linked List Cycle Detection
@@ -147,7 +179,16 @@ class Solution:
     #       a cycle; if fast hits None, there isn't.
     # ------------------------------------------------------------------
     def hasCycle(self, head: Optional[ListNode]) -> bool:
-        raise NotImplementedError
+        slow = head
+        fast = head
+
+        while head.next.next:
+            slow = head.next
+            fast = head.next.next
+            if slow == fast:
+                return True     
+
+        return False
 
     # ------------------------------------------------------------------
     # 6. Palindrome Linked List
@@ -165,7 +206,19 @@ class Solution:
     #       cur.next). Return dummy.next.
     # ------------------------------------------------------------------
     def removeElements(self, head: Optional[ListNode], val: int) -> Optional[ListNode]:
-        raise NotImplementedError
+        if not head:
+            return 
+
+        prev = None 
+        curr = head
+
+        while curr.next:
+            prev = curr
+            if curr.val == val:
+                curr.next = curr.next.next
+            curr = curr.next
+
+        return head
 
     # ------------------------------------------------------------------
     # 8. Middle of the Linked List  (if even count, return the SECOND middle)
@@ -188,6 +241,28 @@ class Solution:
 # Tests — encode the expected answers, so they double as the spec.
 # ----------------------------------------------------------------------
 def run_tests():
+    s = Solution() 
+
+    # 3. Reverse
+    print(to_list(s.reverseList(build_list([1, 2, 3, 4, 5])))) # == [5, 4, 3, 2, 1]
+    print(to_list(s.reverseList(build_list([])))) # == []
+    print(to_list(s.reverseList(build_list([1])))) # == [1]
+    print("3. reverseList              OK")
+
+    # 4. Merge Two Sorted Lists
+    assert to_list(s.mergeTwoLists(build_list([1, 2, 4]), build_list([1, 3, 4]))) == [1, 1, 2, 3, 4, 4]
+    assert to_list(s.mergeTwoLists(build_list([]), build_list([]))) == []
+    assert to_list(s.mergeTwoLists(build_list([]), build_list([0]))) == [0]
+    print("4. mergeTwoLists            OK")
+
+    # 5. Cycle Detection
+    assert s.hasCycle(make_cycle([3, 2, 0, -4], 1)) is True
+    assert s.hasCycle(make_cycle([1, 2], 0)) is True
+    assert s.hasCycle(make_cycle([1], -1)) is False
+    assert s.hasCycle(build_list([])) is False
+    print("5. hasCycle                 OK")
+
+    '''
     # 1. Design HashSet
     hs = MyHashSet()
     hs.add(1)
@@ -210,9 +285,10 @@ def run_tests():
     assert hm.get(2) == 1
     hm.remove(2)
     assert hm.get(2) == -1
-    print("2. MyHashMap                OK")
+    print("2. MyHashMap                OK"
 
-    s = Solution()
+
+    s = Solution() 
 
     # 3. Reverse
     assert to_list(s.reverseList(build_list([1, 2, 3, 4, 5]))) == [5, 4, 3, 2, 1]
@@ -258,6 +334,7 @@ def run_tests():
     headA2, headB2, _ = make_intersection([2, 6, 4], [1, 5], [])  # no shared tail
     assert s.getIntersectionNode(headA2, headB2) is None
     print("9. getIntersectionNode      OK")
+    '''
 
     print("\nAll tests passed.")
 
