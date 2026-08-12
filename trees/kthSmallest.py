@@ -19,4 +19,4 @@ class Solution(object):
             else:
                 return []
           
-        return inorder(root)[k-1] #k-th smallest element
+        return inorder(root)[k-1] #k-th smallest eleement

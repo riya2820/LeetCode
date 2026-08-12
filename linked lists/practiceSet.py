@@ -154,24 +154,26 @@ class Solution:
         # 2 -> 4 -> 6 
 
         # 1 
-        merged = ListNode(-1)
+        merged = ListNode(0)
         prev = merged
         # merged = ListNode(-1) # dummy node
 
         while list1.val and list2.val:
             if list1.val < list2.val:
-                prev.next = list1.val
+                prev.next = list1
                 list1 = list1.next
+                prev = prev.next
             else:
-                prev.next = list2.val
+                prev.next = list2
                 list2 = list2.next
+                prev = prev.next
             
         if list1:
             merged.next = list1
         if list2:
             merged.next = list2
 
-        return merged
+        return merged.next
 
     # ------------------------------------------------------------------
     # 5. Linked List Cycle Detection
@@ -182,13 +184,14 @@ class Solution:
         slow = head
         fast = head
 
-        while head.next.next:
-            slow = head.next
-            fast = head.next.next
+        while fast.next:
+            slow = slow.next
+            fast = fast.next.next
             if slow == fast:
-                return True     
-
+                return True # cycle detected
+            
         return False
+       
 
     # ------------------------------------------------------------------
     # 6. Palindrome Linked List
@@ -197,7 +200,20 @@ class Solution:
     #       two pointers — simpler but O(n) space.)
     # ------------------------------------------------------------------
     def isPalindrome(self, head: Optional[ListNode]) -> bool:
-        raise NotImplementedError
+        slow, head = head, head
+        firstHalf = [slow]
+
+        while fast:
+            slow = slow.next
+            firstHalf.append(slow)
+            fast = fast.next.next
+            
+        middle = slow 
+        while middle:
+            secondHalf.append(middle.val)
+            middle = middle.next
+
+       return firstHalf == secondHalf[::-1] # reversed list
 
     # ------------------------------------------------------------------
     # 7. Remove Linked List Elements
@@ -225,7 +241,13 @@ class Solution:
     # HINT: slow/fast pointers; when fast reaches the end, slow is at middle.
     # ------------------------------------------------------------------
     def middleNode(self, head: Optional[ListNode]) -> Optional[ListNode]:
-        raise NotImplementedError
+        slow, head = head, head
+
+        while fast:
+            slow = slow.next
+            fast = fast.next.next
+
+        return slow
 
     # ------------------------------------------------------------------
     # 9. Intersection of Two Linked Lists  (return the shared NODE, not value)
